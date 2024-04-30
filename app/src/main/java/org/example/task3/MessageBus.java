@@ -1,4 +1,4 @@
-package task3;
+package org.example.task3;
 
 import java.util.ArrayList;
 import java.util.HashMap;

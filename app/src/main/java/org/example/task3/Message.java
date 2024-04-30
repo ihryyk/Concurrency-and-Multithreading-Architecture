@@ -1,4 +1,4 @@
-package task3;
+package org.example.task3;
 
 public class Message {
 

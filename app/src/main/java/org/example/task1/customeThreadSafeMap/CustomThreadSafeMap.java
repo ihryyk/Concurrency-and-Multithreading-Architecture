@@ -1,4 +1,4 @@
-package task1.customeThreadSafeMap;
+package org.example.task1.customeThreadSafeMap;
 
 import java.util.ArrayList;
 import java.util.Collection;

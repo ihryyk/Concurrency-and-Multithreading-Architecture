@@ -1,4 +1,4 @@
-package task3;
+package org.example.task3;
 
 import java.util.Random;
 import java.util.UUID;

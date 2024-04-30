@@ -1,4 +1,4 @@
-package task4;
+package org.example.task4;
 
 public class Main {
 

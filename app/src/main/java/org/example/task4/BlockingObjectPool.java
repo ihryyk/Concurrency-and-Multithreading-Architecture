@@ -1,4 +1,4 @@
-package task4;
+package org.example.task4;
 
 import java.util.LinkedList;
 import java.util.Queue;
