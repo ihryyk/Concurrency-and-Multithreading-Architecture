@@ -24,16 +24,6 @@ public class Main {
             threads[i].start();
         }
 
-        for (int i = 0; i < totalTasks; i++) {
-            try {
-                threads[i].join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new RuntimeException("Thread was interrupted", e);
-            }
-        }
-
-        System.out.println("Done!");
     }
 
 }
