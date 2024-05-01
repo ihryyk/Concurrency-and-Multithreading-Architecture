@@ -1,15 +1,10 @@
 package org.example.task5.model.entity;
 
-public class Currency {
+public record Currency(String code) {
 
-    private final String name;
-
-    public Currency(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
+    @Override
+    public String toString() {
+        return code;
     }
 
 }

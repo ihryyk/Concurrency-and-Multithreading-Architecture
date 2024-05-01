@@ -1,13 +1,20 @@
 package org.example.task5.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
+import lombok.Data;
 
+@Data
 public class Account {
 
     private final String id;
-    private final ConcurrentHashMap<Currency, BigDecimal> balanceMap;
+    private final Map<Currency, BigDecimal> balanceMap;
+    @JsonIgnore
     private final ReentrantLock lock;
 
     public Account(String id) {
@@ -16,27 +23,12 @@ public class Account {
         this.lock = new ReentrantLock();
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public BigDecimal getBalance(Currency currency) {
-        return balanceMap.get(currency);
-    }
-
-    public void setBalance(Currency currency, BigDecimal amount) {
-        balanceMap.put(currency, balanceMap.getOrDefault(currency, BigDecimal.ZERO).add(amount));
-    }
-
-    public void withdraw(Currency currency, BigDecimal amount) throws Exception {
-        if (balanceMap.getOrDefault(currency, BigDecimal.ZERO).compareTo(amount) < 0) {
-            throw new Exception("Insufficient balance");
-        }
-        balanceMap.put(currency, balanceMap.get(currency).subtract(amount));
-    }
-
-    public ReentrantLock getLock() {
-        return lock;
+    @JsonCreator
+    public Account(@JsonProperty("id") String id,
+                   @JsonProperty("balanceMap") Map<Currency, BigDecimal> balanceMap) {
+        this.id = id;
+        this.balanceMap = balanceMap != null ? balanceMap : new ConcurrentHashMap<>();
+        this.lock = new ReentrantLock();
     }
 
 }

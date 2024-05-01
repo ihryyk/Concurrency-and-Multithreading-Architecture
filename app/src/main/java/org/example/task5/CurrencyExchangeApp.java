@@ -4,66 +4,61 @@ import java.math.BigDecimal;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.example.task5.model.dao.AccountDaoImpl;
+import org.example.task5.model.dao.ExchangeRateDaoImpl;
 import org.example.task5.model.entity.Account;
 import org.example.task5.model.entity.Currency;
 import org.example.task5.model.entity.CurrencyPair;
-import org.example.task5.service.AccountService;
-import org.example.task5.service.CurrencyExchangeService;
-import org.example.task5.service.ExchangeRateService;
+import org.example.task5.service.AccountServiceImpl;
+import org.example.task5.service.CurrencyTransactionServiceImpl;
+import org.example.task5.service.ExchangeRateServiceImpl;
 
 public class CurrencyExchangeApp {
 
-    private static final Logger LOGGER = Logger.getLogger(CurrencyExchangeApp.class.getName());
-
     public static void main(String[] args) {
-        // Create services
-        //     AccountDao accountDao = new FileAccountDao("path/to/your/directory");
-        AccountService accountService = new AccountService(accountDao);
-        ExchangeRateService exchangeRateService = new ExchangeRateService();
-        CurrencyExchangeService currencyExchangeService = new CurrencyExchangeService(accountService,
-                exchangeRateService);
+        AccountDaoImpl accountDaoImpl = new AccountDaoImpl("./accounts");
+        AccountServiceImpl accountServiceImpl = new AccountServiceImpl(accountDaoImpl);
 
-        // Create currencies
+        ExchangeRateDaoImpl exchangeRateDaoImpl = new ExchangeRateDaoImpl();
+        ExchangeRateServiceImpl exchangeRateServiceImpl = new ExchangeRateServiceImpl(exchangeRateDaoImpl);
+
+        CurrencyTransactionServiceImpl currencyTransactionServiceImpl = new CurrencyTransactionServiceImpl(
+                accountServiceImpl,
+                exchangeRateServiceImpl);
+
         Currency usd = new Currency("USD");
         Currency eur = new Currency("EUR");
 
-        // Set exchange rate
-        exchangeRateService.setRate(new CurrencyPair(usd, eur), new BigDecimal("0.85"));
+        exchangeRateServiceImpl.setRate(new CurrencyPair(usd, eur), new BigDecimal("0.85"));
 
-        // Create account and set initial balance
         Account account = new Account("123");
-        accountService.saveAccount(account);
-        accountService.credit(account, usd, new BigDecimal("100"));
+        accountServiceImpl.saveAccount(account);
+        accountServiceImpl.deposit(account, usd, new BigDecimal("100"));
 
-        // Create a thread pool
-        ExecutorService executor = Executors.newFixedThreadPool(10);
+        CurrencyPair currencyPair = new CurrencyPair(usd, eur);
 
-        // Submit tasks
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+
         for (int i = 0; i < 10; i++) {
-            executor.submit(() -> {
-                try {
-                    currencyExchangeService.exchange(account.getId(), usd, eur, new BigDecimal(10));
-                    LOGGER.info("Exchange successful");
-                } catch (Exception e) {
-                    LOGGER.log(Level.SEVERE, "Failed to perform exchange operation", e);
-                }
-            });
+            executorService.submit(() -> threadTask(currencyTransactionServiceImpl, account, currencyPair));
         }
+        shutdownExecutorService(executorService);
+    }
 
-        // Shutdown the executor
-        executor.shutdown();
+    private static void threadTask(CurrencyTransactionServiceImpl transactionService, Account account,
+                                   CurrencyPair pair) {
+        transactionService.performTransaction(account, pair, new BigDecimal(10));
+    }
+
+    private static void shutdownExecutorService(
+            ExecutorService executorService) {
+        executorService.shutdown();
         try {
-            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
-                if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
-                    System.err.println("Executor did not terminate");
-                }
+            if (!executorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                executorService.shutdownNow();
             }
         } catch (InterruptedException e) {
-            executor.shutdownNow();
-            Thread.currentThread().interrupt();
+            executorService.shutdownNow();
         }
     }
 
